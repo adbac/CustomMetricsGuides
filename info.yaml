@@ -1,0 +1,13 @@
+name: Custom Metrics Guides
+developer: Adrien Bachelart
+developerURL: https://github.com/adbac
+launchAtStartUp: true
+mainScript: main.py
+version: '0.1.0'
+addToMenu:
+- path: settingsWindow.py
+  preferredName: Custom Metrics Guides
+  shortKey: ""
+html: false
+requiresVersionMajor: '4'
+requiresVersionMinor: '0'
