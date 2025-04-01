@@ -1,15 +1,8 @@
-import math
-
-from fontTools.misc import transform
-from mojo.events import postEvent
-from mojo.subscriber import (Subscriber, listRegisteredSubscribers,
-                             registerGlyphEditorSubscriber,
-                             registerSubscriberEvent,
-                             unregisterGlyphEditorSubscriber)
+from mojo.subscriber import (Subscriber, registerGlyphEditorSubscriber,
+                             registerSubscriberEvent)
 from mojo.UI import getDefault
 
 # originally written by Connor Davenport: https://gist.github.com/connordavenport/ea50758429974d12df3d5c114d9d491b
-
 
 
 border = getDefault("glyphViewVerticalPadding")
@@ -60,11 +53,17 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         self.container.clearSublayers()
 
         self.merzMetrics = {}
-        customMetrics = font.lib.get(KEY, {})
-        
-        for name, value in customMetrics.items():
 
-            displayName = f"{name} ({value})"
+        customMetrics = {}
+        for name, value in font.lib.get(KEY, {}).items():
+            if value in customMetrics:
+                customMetrics[value].append(name)
+            else:
+                customMetrics[value] = [name]
+        
+        for value, names in customMetrics.items():
+
+            displayName = f"{', '.join(names)} ({value})"
             value = int(float(value))
 
             # is there a better way to get the adjusted xPos??
@@ -81,7 +80,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
             # ot = transform.Transform(*trans)
             # n = ot.transformPoint((self.glyph.width + off, value))
 
-            self.merzMetrics[name] = dict(
+            self.merzMetrics[tuple(names)] = dict(
                 line = self.container.appendLineSublayer(
                     startPoint=(-border*2, value),
                     endPoint=((self.glyph.width + border)*2, value),
@@ -103,8 +102,6 @@ class CustomMetricsGuidesSubscriber(Subscriber):
             )
 
     def customMetricsDataDidChange(self, info):
-        # print("customMetricsDataDidChange ///////////////////")
-        # print(info)
         self.drawCustomMetrics(self.glyph.font)
 
     glyphEditorGlyphDidChangeContoursDelay = 0.01
@@ -113,7 +110,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         if self.glyph.leftMargin != self.leftMargin or self.glyph.rightMargin != self.rightMargin:
             newTitleX = self.glyph.width
             newLineEndX = (self.glyph.width + border)*2
-            for name, metrics in self.merzMetrics.items():
+            for names, metrics in self.merzMetrics.items():
                 y = metrics["line"].getEndPoint()[1]
                 metrics["line"].setEndPoint((newLineEndX, y))
                 y = metrics["text"].getPosition()[1]
