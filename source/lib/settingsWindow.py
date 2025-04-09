@@ -36,17 +36,18 @@ class SettingsWindowController(ezui.WindowController):
                     dict(
                         identifier="name",
                         title="Name",
-                        # width=35,
                         editable=True
                     ),
                     dict(
                         identifier="value",
                         title="Y Value",
-                        # width=50,
+                        editable=True,
                         cellDescription=dict(
-                            valueType="integer"
-                        ),
-                        editable=True
+                            valueType="integer",
+                            cellClassArguments=dict(
+                                continuous=True,
+                            )
+                        )
                     ),
                 ]
             )
