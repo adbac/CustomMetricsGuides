@@ -4,13 +4,6 @@ from mojo.UI import getDefault
 
 # originally written by Connor Davenport: https://gist.github.com/connordavenport/ea50758429974d12df3d5c114d9d491b
 
-
-border = getDefault("glyphViewVerticalPadding")
-fontsize = getDefault("textFontSize")
-
-metricsStrokeColor = getDefault("glyphViewFontMetricsStrokeColor")
-metricsTextColor = getDefault("glyphViewMetricsTitlesColor")
-
 KEY = "com.adbac.customMetricsGuides"
 
 '''
@@ -28,7 +21,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         glyphEditor = self.getGlyphEditor()
         self.container = glyphEditor.extensionContainer(
             identifier=KEY,
-            location="background",
+            location="middleground",
             clear=True
         )
         self.glyph = glyphEditor.getGlyph()
@@ -51,6 +44,12 @@ class CustomMetricsGuidesSubscriber(Subscriber):
     def drawCustomMetrics(self, font):
         # based on benedikt bramböck's `ShowVMetrics` tool
         self.container.clearSublayers()
+
+        border = getDefault("glyphViewVerticalPadding") * 2
+        fontsize = getDefault("textFontSize")
+
+        metricsStrokeColor = getDefault("glyphViewFontMetricsStrokeColor")
+        metricsTextColor = getDefault("glyphViewMetricsTitlesColor")
 
         self.merzMetrics = {}
 
@@ -82,8 +81,8 @@ class CustomMetricsGuidesSubscriber(Subscriber):
 
             self.merzMetrics[tuple(names)] = dict(
                 line = self.container.appendLineSublayer(
-                    startPoint=(-border*2, value),
-                    endPoint=((self.glyph.width + border)*2, value),
+                    startPoint=(-border, value),
+                    endPoint=(self.glyph.width + border, value),
                     strokeWidth=0.5,
                     strokeColor=metricsStrokeColor,
                 ),
