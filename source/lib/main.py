@@ -21,7 +21,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         glyphEditor = self.getGlyphEditor()
         self.container = glyphEditor.extensionContainer(
             identifier=KEY,
-            location="middleground",
+            location="background",
             clear=True
         )
         self.glyph = glyphEditor.getGlyph()
