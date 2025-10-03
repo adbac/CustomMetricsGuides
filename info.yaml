@@ -3,7 +3,7 @@ developer: Adrien Bachelart
 developerURL: https://github.com/adbac
 launchAtStartUp: true
 mainScript: main.py
-version: '0.1.4b'
+version: '0.1.5b'
 addToMenu:
 - path: settingsWindow.py
   preferredName: Custom Metrics Guides
