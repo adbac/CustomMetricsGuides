@@ -110,5 +110,5 @@ class SettingsWindowController(ezui.WindowController):
         self.f.lib[KEY] = data
 
 
-if CurrentFont() and __name__ == "__main__":
+if CurrentFont() is not None and __name__ == "__main__":
     SettingsWindowController()
