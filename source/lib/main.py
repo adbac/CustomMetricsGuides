@@ -1,15 +1,14 @@
+# originally written by Connor Davenport: https://gist.github.com/connordavenport/ea50758429974d12df3d5c114d9d491b
+
+import math
+
+from fontTools.misc import transform
 from mojo.subscriber import (Subscriber, registerGlyphEditorSubscriber,
                              registerSubscriberEvent)
 from mojo.UI import getDefault
 
-# originally written by Connor Davenport: https://gist.github.com/connordavenport/ea50758429974d12df3d5c114d9d491b
 
 KEY = "com.adbac.customMetricsGuides"
-
-'''
-start up script to draw custom metric guides in the
-glyph view using info stored in the font lib.
-'''
 
 
 class CustomMetricsGuidesSubscriber(Subscriber):
@@ -25,6 +24,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
             clear=True
         )
         self.glyph = glyphEditor.getGlyph()
+        self.width = self.glyph.width
         self.leftMargin = self.glyph.leftMargin
         self.rightMargin = self.glyph.rightMargin
 
@@ -46,6 +46,23 @@ class CustomMetricsGuidesSubscriber(Subscriber):
     def getGlyphViewBorder(self):
         border = getDefault("glyphViewVerticalPadding") * 2
         return border
+
+    def getGuideTextPosition(self, yPos):
+        font = self.glyph.font
+        if font.info.italicAngle in {None, 0}:
+            return (self.glyph.width, yPos)
+        off = font.lib.get("com.typemytype.robofont.italicSlantOffset", 0)
+        x = y = math.radians(-(font.info.italicAngle or 0))
+        matrix = transform.Identity.skew(x=x, y=y)
+        t = transform.Transform()
+        oX, oY = (0,0)
+        t = t.translate(oX, oY)
+        t = t.transform(matrix)
+        t = t.translate(-oX, -oY)
+        trans = tuple(t)
+        ot = transform.Transform(*trans)
+        n = ot.transformPoint((self.glyph.width + off, yPos))
+        return (n[0], yPos)
 
     def drawCustomMetrics(self, font):
         # based on benedikt bramböck's `ShowVMetrics` tool
@@ -71,20 +88,6 @@ class CustomMetricsGuidesSubscriber(Subscriber):
             displayName = f"{', '.join(names)} ({value})"
             value = int(float(value))
 
-            # is there a better way to get the adjusted xPos??
-
-            # off = font.lib.get('com.typemytype.robofont.italicSlantOffset', 0)
-            # x = y = math.radians(-font.info.italicAngle or 0)
-            # matrix = transform.Identity.skew(x=x, y=y)
-            # t = transform.Transform()
-            # oX, oY = (0,0)
-            # t = t.translate(oX, oY)
-            # t = t.transform(matrix)
-            # t = t.translate(-oX, -oY)
-            # trans = tuple(t)
-            # ot = transform.Transform(*trans)
-            # n = ot.transformPoint((self.glyph.width + off, value))
-
             self.merzMetrics[tuple(names)] = dict(
                 line = self.container.appendLineSublayer(
                     startPoint=(-border, value),
@@ -93,8 +96,8 @@ class CustomMetricsGuidesSubscriber(Subscriber):
                     strokeColor=metricsStrokeColor,
                 ),
                 text = self.container.appendTextLineSublayer(
-                    # position=(n[0], value),
-                    position=(self.glyph.width, value),
+                    position=(self.getGuideTextPosition(value)[0], value),
+                    # position=(self.glyph.width, value),
                     offset=(20, 4),
                     size=(20, 20),
                     weight="medium",
@@ -111,15 +114,17 @@ class CustomMetricsGuidesSubscriber(Subscriber):
 
     def updateMargins(self):
         border = self.getGlyphViewBorder()
-        if self.glyph.leftMargin != self.leftMargin or self.glyph.rightMargin != self.rightMargin:
-            newTitleX = self.glyph.width
-            newLineEndX = (self.glyph.width + border)*2
+        if (
+            self.glyph.leftMargin != self.leftMargin
+            or self.glyph.rightMargin != self.rightMargin
+            or self.glyph.width != self.width
+        ):
             for names, metrics in self.merzMetrics.items():
-                y = metrics["line"].getEndPoint()[1]
-                metrics["line"].setEndPoint((newLineEndX, y))
-                y = metrics["text"].getPosition()[1]
-                metrics["text"].setPosition((newTitleX, y))
+                x, y = self.getGuideTextPosition(metrics["line"].getEndPoint()[1])
+                metrics["line"].setEndPoint(((self.glyph.width + border), y))
+                metrics["text"].setPosition((x, y))
         else:
+            self.width = self.glyph.width
             self.leftMargin = self.glyph.leftMargin
             self.rightMargin = self.glyph.rightMargin
 
