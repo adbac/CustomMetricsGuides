@@ -17,7 +17,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
     debug = True
 
     def build(self):
-                
+
         glyphEditor = self.getGlyphEditor()
         self.container = glyphEditor.extensionContainer(
             identifier=KEY,
@@ -30,9 +30,11 @@ class CustomMetricsGuidesSubscriber(Subscriber):
 
         self.merzMetrics = {}
 
+        self.holdEvents = False
+
     def started(self):
         self.drawCustomMetrics(self.glyph.font)
-        
+
     def destroy(self):
         self.container.clearSublayers()
 
@@ -41,7 +43,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         font = self.glyph.font
         self.drawCustomMetrics(font)
 
-    def getBorder(self):
+    def getGlyphViewBorder(self):
         border = getDefault("glyphViewVerticalPadding") * 2
         return border
 
@@ -49,7 +51,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         # based on benedikt bramböck's `ShowVMetrics` tool
         self.container.clearSublayers()
 
-        border = self.getBorder()
+        border = self.getGlyphViewBorder()
         fontsize = getDefault("textFontSize")
 
         metricsStrokeColor = getDefault("glyphViewFontMetricsStrokeColor")
@@ -63,7 +65,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
                 customMetrics[value].append(name)
             else:
                 customMetrics[value] = [name]
-        
+
         for value, names in customMetrics.items():
 
             displayName = f"{', '.join(names)} ({value})"
@@ -107,10 +109,8 @@ class CustomMetricsGuidesSubscriber(Subscriber):
     def customMetricsDataDidChange(self, info):
         self.drawCustomMetrics(self.glyph.font)
 
-    glyphEditorGlyphDidChangeContoursDelay = 0.01
-
-    def glyphEditorGlyphDidChangeContours(self, info):
-        border = self.getBorder()
+    def updateMargins(self):
+        border = self.getGlyphViewBorder()
         if self.glyph.leftMargin != self.leftMargin or self.glyph.rightMargin != self.rightMargin:
             newTitleX = self.glyph.width
             newLineEndX = (self.glyph.width + border)*2
@@ -122,6 +122,22 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         else:
             self.leftMargin = self.glyph.leftMargin
             self.rightMargin = self.glyph.rightMargin
+
+    glyphEditorGlyphDidChangeContoursDelay = 0.01
+
+    def glyphEditorGlyphDidChangeContours(self, info):
+        if not self.holdEvents:
+            self.holdEvents = True
+            self.updateMargins()
+            self.holdEvents = False
+
+    glyphEditorGlyphDidChangeMetricsDelay = 0.01
+
+    def glyphEditorGlyphDidChangeMetrics(self, info):
+        if not self.holdEvents:
+            self.holdEvents = True
+            self.updateMargins()
+            self.holdEvents = False
 
 
 def subscriberInfoExtractor(subscriber, info):
