@@ -41,11 +41,15 @@ class CustomMetricsGuidesSubscriber(Subscriber):
         font = self.glyph.font
         self.drawCustomMetrics(font)
 
+    def getBorder(self):
+        border = getDefault("glyphViewVerticalPadding") * 2
+        return border
+
     def drawCustomMetrics(self, font):
         # based on benedikt bramböck's `ShowVMetrics` tool
         self.container.clearSublayers()
 
-        border = getDefault("glyphViewVerticalPadding") * 2
+        border = self.getBorder()
         fontsize = getDefault("textFontSize")
 
         metricsStrokeColor = getDefault("glyphViewFontMetricsStrokeColor")
@@ -106,6 +110,7 @@ class CustomMetricsGuidesSubscriber(Subscriber):
     glyphEditorGlyphDidChangeContoursDelay = 0.01
 
     def glyphEditorGlyphDidChangeContours(self, info):
+        border = self.getBorder()
         if self.glyph.leftMargin != self.leftMargin or self.glyph.rightMargin != self.rightMargin:
             newTitleX = self.glyph.width
             newLineEndX = (self.glyph.width + border)*2

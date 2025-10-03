@@ -53,7 +53,7 @@ class SettingsWindowController(ezui.WindowController):
             )
         )
 
-        self.w = ezui.EZWindow(
+        self.w = ezui.EZPanel(
             title="Custom Metrics Guides - Settings",
             content=content,
             controller=self,
